@@ -1,7 +1,8 @@
 import { FontAwesome6 } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, SafeAreaView, TouchableOpacity, Text, TextInput, Button } from 'react-native';
+import { View, StyleSheet, SafeAreaView, TouchableOpacity, Text } from 'react-native';
 import { DataTable } from 'react-native-paper';
+import AddProductForm from './addProductForm'; // Importa el nuevo componente
 
 // Define la interfaz para los productos
 interface Product {
@@ -15,8 +16,7 @@ export default function EditableTable() {
   const [products, setProducts] = useState<Product[]>([]);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(6);
-  const [isFormVisible, setIsFormVisible] = useState(false); // Estado para el formulario
-  const [newProduct, setNewProduct] = useState({ nombre: '', marca: '', cantidad: 0 }); // Estado para el nuevo producto
+  const [isFormVisible, setIsFormVisible] = useState(false);
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -35,10 +35,10 @@ export default function EditableTable() {
   const from = page * rowsPerPage;
   const to = Math.min((page + 1) * rowsPerPage, products.length);
 
-  const handleAddProduct = () => {
-    // Lógica para agregar producto (aquí puedes enviar el nuevo producto a tu API)
+  const handleAddProduct = (newProduct: { nombre: string; marca: string; cantidad: number }) => {
+    // Aquí puedes enviar el nuevo producto a tu API y actualizar el estado
     console.log('Nuevo producto:', newProduct);
-    setIsFormVisible(false); // Ocultar formulario después de agregar
+    setIsFormVisible(false);
   };
 
   return (
@@ -76,38 +76,19 @@ export default function EditableTable() {
       <View style={styles.buttonContainer}>
         <TouchableOpacity 
           style={styles.addButton} 
-          onPress={() => setIsFormVisible(true)} // Mostrar formulario
+          onPress={() => setIsFormVisible(true)} 
         >
           <FontAwesome6 name="add" size={24} color="white" />
           <Text style={styles.buttonText}></Text>
         </TouchableOpacity>
       </View>
 
-      {/* Formulario flotante */}
+      {/* Muestra el formulario solo si está visible */}
       {isFormVisible && (
-        <View style={styles.formContainer}>
-          <TextInput
-            placeholder="Nombre"
-            value={newProduct.nombre}
-            onChangeText={(text) => setNewProduct({ ...newProduct, nombre: text })}
-            style={styles.input}
-          />
-          <TextInput
-            placeholder="Marca"
-            value={newProduct.marca}
-            onChangeText={(text) => setNewProduct({ ...newProduct, marca: text })}
-            style={styles.input}
-          />
-          <TextInput
-            placeholder="Cantidad"
-            value={String(newProduct.cantidad)}
-            onChangeText={(text) => setNewProduct({ ...newProduct, cantidad: Number(text) })}
-            keyboardType="numeric"
-            style={styles.input}
-          />
-          <Button title="Agregar" onPress={handleAddProduct} />
-          <Button title="Cancelar" onPress={() => setIsFormVisible(false)} color="red" />
-        </View>
+        <AddProductForm 
+          onAdd={handleAddProduct} 
+          onCancel={() => setIsFormVisible(false)} 
+        />
       )}
     </SafeAreaView>
   );
@@ -133,27 +114,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#6200ee',
     padding: 10,
+    paddingVertical: 10,
     borderRadius: 5,
   },
   buttonText: {
     color: 'white',
     marginLeft: 10,
-  },
-  formContainer: {
-    position: 'absolute',
-    bottom: 150,
-    right: 20,
-    backgroundColor: 'white',
-    padding: 20,
-    borderRadius: 5,
-    elevation: 5,
-    width: '80%',
-  },
-  input: {
-    height: 40,
-    borderColor: 'gray',
-    borderWidth: 1,
-    marginBottom: 10,
-    paddingHorizontal: 10,
   },
 });
