@@ -24,6 +24,8 @@ interface Product {
 
 export default function EditableTable() {
   const [products, setProducts] = useState<Product[]>([]);
+  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
+  const [searchId, setSearchId] = useState<string>(''); // Estado para el ID de búsqueda
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(6);
   const [isFormVisible, setIsFormVisible] = useState(false);
@@ -36,8 +38,23 @@ export default function EditableTable() {
       const response = await fetch('http://localhost:3000/products/getProducts');
       const data = await response.json();
       setProducts(data);
+      setFilteredProducts(data); // Actualizamos los productos filtrados al cargar
     } catch (error) {
       console.error('Error fetching products:', error);
+    }
+  };
+
+  const fetchProductById = async (id: string) => {
+    try {
+      const response = await fetch(`http://localhost:3000/products/getProductByID/${id}`);
+      const data = await response.json();
+      if (data) {
+        setFilteredProducts([data]); // Solo mostramos el producto encontrado
+      } else {
+        setFilteredProducts([]); // Si no se encuentra, mostramos vacío
+      }
+    } catch (error) {
+      console.error('Error fetching product by ID:', error);
     }
   };
 
@@ -45,8 +62,16 @@ export default function EditableTable() {
     fetchProducts();
   }, []);
 
+  useEffect(() => {
+    if (searchId) {
+      fetchProductById(searchId); // Llama a la API al cambiar el ID de búsqueda
+    } else {
+      setFilteredProducts(products); // Si no hay búsqueda, mostramos todos los productos
+    }
+  }, [searchId, products]);
+
   const from = page * rowsPerPage;
-  const to = Math.min((page + 1) * rowsPerPage, products.length);
+  const to = Math.min((page + 1) * rowsPerPage, filteredProducts.length);
 
   const handleAddProduct = (newProduct: { nombre: string; marca: string; cantidad: number }) => {
     setIsFormVisible(false);
@@ -104,6 +129,15 @@ export default function EditableTable() {
 
   return (
     <SafeAreaView style={styles.container}>
+      {/* Barra de búsqueda */}
+      <TextInput
+        placeholder="Buscar por ID"
+        value={searchId}
+        onChangeText={setSearchId}
+        style={styles.searchInput}
+        keyboardType="numeric"
+      />
+      
       <ScrollView horizontal>
         <View style={styles.tableContainer}>
           <DataTable>
@@ -117,7 +151,7 @@ export default function EditableTable() {
               <DataTable.Title numeric style={styles.titleCell}>Guardar</DataTable.Title>
             </DataTable.Header>
 
-            {products.slice(from, to).map((product) => (
+            {filteredProducts.slice(from, to).map((product) => (
               <DataTable.Row key={product.id}>
                 <DataTable.Cell style={styles.cell}>
                   <TouchableOpacity onPress={() => openModal(product)}>
@@ -170,9 +204,9 @@ export default function EditableTable() {
 
           <DataTable.Pagination
             page={page}
-            numberOfPages={Math.ceil(products.length / rowsPerPage)}
+            numberOfPages={Math.ceil(filteredProducts.length / rowsPerPage)}
             onPageChange={(page) => setPage(page)}
-            label={`Página ${page + 1} de ${Math.ceil(products.length / rowsPerPage)}`}
+            label={`Página ${page + 1} de ${Math.ceil(filteredProducts.length / rowsPerPage)}`}
             numberOfItemsPerPage={rowsPerPage}
             onItemsPerPageChange={(num) => {
               setRowsPerPage(num);
@@ -198,108 +232,116 @@ export default function EditableTable() {
 
       {/* Modal para mostrar detalles del producto */}
       <Modal
-        animationType="slide"
+        animationType="fade"
         transparent={true}
         visible={!!selectedProduct}
         onRequestClose={closeModal}
       >
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
-            {selectedProduct && (
-              <>
-                <Text style={styles.modalTitle}>{`Producto ID: ${selectedProduct.id}`}</Text>
-                <Text>{`Nombre: ${selectedProduct.nombre}`}</Text>
-                <Text>{`Marca: ${selectedProduct.marca}`}</Text>
-                <Text>{`Cantidad: ${selectedProduct.cantidad}`}</Text>
-              </>
-            )}
-            <Pressable style={styles.closeButton} onPress={closeModal}>
-              <Text style={styles.closeButtonText}>Cerrar</Text>
-            </Pressable>
-          </View>
+          {selectedProduct && (
+            <>
+              <Text style={styles.modalTitle}>{`Producto ID: ${selectedProduct.id}`}</Text>
+              <Text>{`Nombre: ${selectedProduct.nombre}`}</Text>
+              <Text>{`Marca: ${selectedProduct.marca}`}</Text>
+              <Text>{`Cantidad: ${selectedProduct.cantidad}`}</Text>
+            </>
+          )}
+          <Pressable style={styles.closeButton} onPress={closeModal}>
+            <Text style={styles.closeButtonText}>Cerrar</Text>
+          </Pressable>
         </View>
-      </Modal>
-    </SafeAreaView>
-  );
+      </View>
+    </Modal>
+  </SafeAreaView>
+);
 }
 
 // Obtener el ancho de la ventana
 const { width: windowWidth } = Dimensions.get('window');
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 10,
-    width: windowWidth, 
-    overflow: 'hidden',
-  },
-  tableContainer: {
-    width: '100%', 
-    maxWidth: windowWidth, 
-    overflow: 'hidden', 
-  },
-  cell: {
-    paddingVertical: 5,
-    paddingHorizontal: -5,
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexDirection: 'row',
-    flex: 1,
-    minWidth: 50,
-  },
-  titleCell: {
-    flex: 1,
-    minWidth: 50,
-  },
-  input: {
-    height: 30,
-    borderColor: 'gray',
-    borderWidth: 1,
-    borderRadius: 5,
-    paddingHorizontal: 5,
-    width: '90%',
-  },
-  buttonContainer: {
-    position: 'absolute',
-    bottom: 20,
-    right: 20,
-  },
-  addButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#6200ee',
-    padding: 10,
-    borderRadius: 5,
-  },
-  buttonText: {
-    color: 'white',
-    marginLeft: 10,
-  },
-  modalContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-  },
-  modalContent: {
-    width: '80%',
-    backgroundColor: 'white',
-    borderRadius: 10,
-    padding: 20,
-    alignItems: 'center',
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 10,
-  },
-  closeButton: {
-    marginTop: 20,
-    backgroundColor: '#6200ee',
-    borderRadius: 5,
-    padding: 10,
-  },
-  closeButtonText: {
-    color: 'white',
-  },
+container: {
+  flex: 1,
+  padding: 10,
+  width: windowWidth,
+  overflow: 'hidden',
+},
+tableContainer: {
+  width: '100%',
+  maxWidth: windowWidth,
+  overflow: 'hidden',
+},
+cell: {
+  paddingVertical: 5,
+  paddingHorizontal: -5,
+  alignItems: 'center',
+  justifyContent: 'center',
+  flexDirection: 'row',
+  flex: 1,
+  minWidth: 50,
+},
+titleCell: {
+  flex: 1,
+  minWidth: 50,
+},
+input: {
+  height: 30,
+  borderColor: 'gray',
+  borderWidth: 1,
+  borderRadius: 5,
+  paddingHorizontal: 5,
+  width: '90%',
+},
+searchInput: {
+  height: 40,
+  borderColor: 'gray',
+  borderWidth: 1,
+  borderRadius: 5,
+  paddingHorizontal: 10,
+  marginBottom: 10,
+},
+buttonContainer: {
+  position: 'absolute',
+  bottom: 20,
+  right: 20,
+},
+addButton: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  backgroundColor: '#6200ee',
+  padding: 10,
+  borderRadius: 5,
+},
+buttonText: {
+  color: 'white',
+  marginLeft: 10,
+},
+modalContainer: {
+  flex: 1,
+  justifyContent: 'center',
+  alignItems: 'center',
+  backgroundColor: 'rgba(0, 0, 0, 0.5)',
+},
+modalContent: {
+  width: '80%',
+  backgroundColor: 'white',
+  borderRadius: 10,
+  padding: 20,
+  alignItems: 'center',
+},
+modalTitle: {
+  fontSize: 18,
+  fontWeight: 'bold',
+  marginBottom: 10,
+},
+closeButton: {
+  marginTop: 20,
+  backgroundColor: '#6200ee',
+  borderRadius: 5,
+  padding: 10,
+},
+closeButtonText: {
+  color: 'white',
+},
 });
