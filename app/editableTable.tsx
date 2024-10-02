@@ -1,6 +1,17 @@
 import { Feather, FontAwesome6 } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, SafeAreaView, TouchableOpacity, Text, ScrollView, TextInput, Dimensions } from 'react-native';
+import {
+  View,
+  StyleSheet,
+  SafeAreaView,
+  TouchableOpacity,
+  Text,
+  ScrollView,
+  TextInput,
+  Dimensions,
+  Modal,
+  Pressable,
+} from 'react-native';
 import { DataTable } from 'react-native-paper';
 import AddProductForm from './addProductForm';
 
@@ -18,6 +29,7 @@ export default function EditableTable() {
   const [isFormVisible, setIsFormVisible] = useState(false);
   const [editingProduct, setEditingProduct] = useState<number | null>(null);
   const [editedFields, setEditedFields] = useState<{ [key: string]: any }>({});
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null); // Para el modal
 
   const fetchProducts = async () => {
     try {
@@ -75,9 +87,19 @@ export default function EditableTable() {
       console.error('Error updating product:', error);
     }
   };
-  
+
   const handleFieldChange = (field: string, value: any) => {
     setEditedFields((prev) => ({ ...prev, [field]: value }));
+  };
+
+  // Función para abrir el modal
+  const openModal = (product: Product) => {
+    setSelectedProduct(product);
+  };
+
+  // Función para cerrar el modal
+  const closeModal = () => {
+    setSelectedProduct(null);
   };
 
   return (
@@ -97,7 +119,11 @@ export default function EditableTable() {
 
             {products.slice(from, to).map((product) => (
               <DataTable.Row key={product.id}>
-                <DataTable.Cell style={styles.cell}>{product.id}</DataTable.Cell>
+                <DataTable.Cell style={styles.cell}>
+                  <TouchableOpacity onPress={() => openModal(product)}>
+                    <Text>{product.id}</Text>
+                  </TouchableOpacity>
+                </DataTable.Cell>
                 <DataTable.Cell style={styles.cell}>
                   <TextInput
                     value={editingProduct === product.id ? (editedFields.nombre !== undefined ? editedFields.nombre : product.nombre) : product.nombre}
@@ -169,6 +195,30 @@ export default function EditableTable() {
           onCancel={() => setIsFormVisible(false)} 
         />
       )}
+
+      {/* Modal para mostrar detalles del producto */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={!!selectedProduct}
+        onRequestClose={closeModal}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            {selectedProduct && (
+              <>
+                <Text style={styles.modalTitle}>{`Producto ID: ${selectedProduct.id}`}</Text>
+                <Text>{`Nombre: ${selectedProduct.nombre}`}</Text>
+                <Text>{`Marca: ${selectedProduct.marca}`}</Text>
+                <Text>{`Cantidad: ${selectedProduct.cantidad}`}</Text>
+              </>
+            )}
+            <Pressable style={styles.closeButton} onPress={closeModal}>
+              <Text style={styles.closeButtonText}>Cerrar</Text>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -180,13 +230,13 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 10,
-    width: windowWidth, // Asegura que el contenedor ocupe todo el ancho de la pantalla
-    overflow: 'hidden', // Evita el scroll
+    width: windowWidth, 
+    overflow: 'hidden',
   },
   tableContainer: {
-    width: '100%', // Asegura que la tabla ocupe el 100% del ancho disponible
-    maxWidth: windowWidth, // Limita el ancho máximo
-    overflow: 'hidden', // Evita el scroll
+    width: '100%', 
+    maxWidth: windowWidth, 
+    overflow: 'hidden', 
   },
   cell: {
     paddingVertical: 5,
@@ -207,7 +257,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 5,
     paddingHorizontal: 5,
-    width: '90%', // Mantenerlo más estrecho
+    width: '90%',
   },
   buttonContainer: {
     position: 'absolute',
@@ -224,5 +274,32 @@ const styles = StyleSheet.create({
   buttonText: {
     color: 'white',
     marginLeft: 10,
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalContent: {
+    width: '80%',
+    backgroundColor: 'white',
+    borderRadius: 10,
+    padding: 20,
+    alignItems: 'center',
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+  closeButton: {
+    marginTop: 20,
+    backgroundColor: '#6200ee',
+    borderRadius: 5,
+    padding: 10,
+  },
+  closeButtonText: {
+    color: 'white',
   },
 });
