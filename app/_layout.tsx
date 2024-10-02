@@ -1,7 +1,6 @@
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { Drawer } from 'expo-router/drawer';
 import { Entypo, FontAwesome5, MaterialIcons } from '@expo/vector-icons'; // Import FontAwesome5
-import { PaperProvider } from 'react-native-paper';
 
 export default function Layout() {
     return (

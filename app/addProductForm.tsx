@@ -11,11 +11,29 @@ const AddProductForm: React.FC<ProductFormProps> = ({ onAdd, onCancel }) => {
   const [marca, setMarca] = useState('');
   const [cantidad, setCantidad] = useState(0);
 
-  const handleAdd = () => {
-    onAdd({ nombre, marca, cantidad });
-    setNombre('');
-    setMarca('');
-    setCantidad(0);
+  const handleAdd = async () => {
+    const newProduct = { nombre, marca, cantidad };
+    
+    try {
+      const response = await fetch('http://localhost:3000/products/createProduct', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(newProduct),
+      });
+
+      if (response.ok) {
+        onAdd(newProduct); // Llama a la función onAdd con el nuevo producto
+        setNombre('');
+        setMarca('');
+        setCantidad(0);
+      } else {
+        console.error('Error al agregar el producto:', response.statusText);
+      }
+    } catch (error) {
+      console.error('Error al hacer la solicitud:', error);
+    }
   };
 
   return (
