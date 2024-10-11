@@ -1,35 +1,33 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, TextInput, TouchableOpacity, Text } from 'react-native';
+import { API_URL } from '@/constants/config';
 
-interface ProductFormProps {
-  onAdd: (product: { nombre: string; marca: string; cantidad: number }) => void;
+interface LineaFormProps {
+  onAdd: () => void; // Cambiamos aquí para indicar que no necesita parámetros
   onCancel: () => void;
 }
 
-const AddProductForm: React.FC<ProductFormProps> = ({ onAdd, onCancel }) => {
+const AddLineaForm: React.FC<LineaFormProps> = ({ onAdd, onCancel }) => {
   const [nombre, setNombre] = useState('');
-  const [marca, setMarca] = useState('');
-  const [cantidad, setCantidad] = useState(0);
 
   const handleAdd = async () => {
-    const newProduct = { nombre, marca, cantidad };
-    
+    const newLinea = { nombre };
+
     try {
-      const response = await fetch('http://localhost:3000/products/createProduct', {
+      const response = await fetch(`${API_URL}/lineas/registrarLinea`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(newProduct),
+        body: JSON.stringify(newLinea),
       });
 
       if (response.ok) {
-        onAdd(newProduct); // Llama a la función onAdd con el nuevo producto
-        setNombre('');
-        setMarca('');
-        setCantidad(0);
+        console.log('Línea agregada exitosamente!');
+        setNombre(''); // Reinicia el campo de entrada
+        onAdd(); // Llama a la función onAdd para cerrar el formulario
       } else {
-        console.error('Error al agregar el producto:', response.statusText);
+        console.error('Error al agregar la línea:', response.statusText);
       }
     } catch (error) {
       console.error('Error al hacer la solicitud:', error);
@@ -42,19 +40,6 @@ const AddProductForm: React.FC<ProductFormProps> = ({ onAdd, onCancel }) => {
         placeholder="Nombre"
         value={nombre}
         onChangeText={setNombre}
-        style={styles.input}
-      />
-      <TextInput
-        placeholder="Marca"
-        value={marca}
-        onChangeText={setMarca}
-        style={styles.input}
-      />
-      <TextInput
-        placeholder="Cantidad"
-        value={String(cantidad)}
-        onChangeText={(text) => setCantidad(Number(text))}
-        keyboardType="numeric"
         style={styles.input}
       />
       <View style={styles.buttonsContainer}>
@@ -107,4 +92,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default AddProductForm;
+export default AddLineaForm;
