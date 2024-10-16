@@ -1,3 +1,5 @@
+//editableTable.tsx
+
 import React from 'react';
 import { View, TextInput, SafeAreaView, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
 import { DataTable } from 'react-native-paper';
@@ -24,9 +26,21 @@ export default function EditableTable({ columns, apiUrls, entityName }: Editable
   const [searchId, setSearchId] = React.useState<string>('');
   const { filteredEntities } = useFilteredEntities(entities, searchId);
 
-  const { editingEntity, editedFields, startEditing, stopEditing, handleFieldChange, handleSave, handleDelete } = useEntityEditing<EntityBase>(
-    { update: apiUrls.update, delete: apiUrls.delete }, 
-    entityName, 
+  const [page, setPage] = React.useState<number>(0);
+  const [numberOfItemsPerPageList] = React.useState([4]);
+  const [itemsPerPage, onItemsPerPageChange] = React.useState(numberOfItemsPerPageList[0]);
+
+  const from = page * itemsPerPage;
+  const to = Math.min((page + 1) * itemsPerPage, filteredEntities.length);
+  const paginatedEntities = filteredEntities.slice(from, to);
+
+  React.useEffect(() => {
+    setPage(0);
+  }, [itemsPerPage]);
+
+  const { editingEntity, editedFields, startEditing, handleFieldChange, handleSave, handleDelete } = useEntityEditing<EntityBase>(
+    { update: apiUrls.update, delete: apiUrls.delete },
+    entityName,
     fetchEntities
   );
 
@@ -56,7 +70,7 @@ export default function EditableTable({ columns, apiUrls, entityName }: Editable
               <DataTable.Title numeric style={styles.titleCell}>Guardar</DataTable.Title>
             </DataTable.Header>
 
-            {filteredEntities.map((entity) => (
+            {paginatedEntities.map((entity) => (
               <DataTable.Row key={entity.id}>
                 {columns.map((col) => (
                   <DataTable.Cell key={`${entity.id}-${col.key}`} style={styles.cell}>
@@ -86,11 +100,22 @@ export default function EditableTable({ columns, apiUrls, entityName }: Editable
               </DataTable.Row>
             ))}
           </DataTable>
+          <DataTable.Pagination
+            page={page}
+            numberOfPages={Math.ceil(filteredEntities.length / itemsPerPage)}
+            onPageChange={(newPage) => setPage(newPage)}
+            label={`${from + 1}-${to} of ${filteredEntities.length}`}
+            numberOfItemsPerPageList={numberOfItemsPerPageList}
+            onItemsPerPageChange={onItemsPerPageChange}
+            showFastPaginationControls
+            selectPageDropdownLabel={'Rows per page'}
+          />
         </View>
       </ScrollView>
     </SafeAreaView>
   );
 }
+
 
 const styles = StyleSheet.create({
   container: {

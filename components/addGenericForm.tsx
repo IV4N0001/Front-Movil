@@ -1,51 +1,50 @@
-import React, { useState } from 'react';
+// addGenericForm.tsx
+
+import React from 'react';
 import { View, StyleSheet, TextInput, TouchableOpacity, Text } from 'react-native';
-import { API_URL } from '@/constants/config';
+import { useEntityCreate } from '../hooks/useEntityCreate';
 
 interface GenericFormProps {
-  onAdd: () => void; // Cambiamos aquí para indicar que no necesita parámetros
+  onAdd: () => void;
   onCancel: () => void;
-  apiEndpoint: string; // Nueva propiedad para la URL de la API
+  apiUrls: {
+    create: string;
+    fetchAll: string;
+  };
+  entityName: string;
 }
 
-const AddGenericForm: React.FC<GenericFormProps> = ({ onAdd, onCancel, apiEndpoint }) => {
-  const [nombre, setNombre] = useState('');
+interface Entity {
+  nombre: string;
+}
+
+const AddGenericForm: React.FC<GenericFormProps> = ({
+  onAdd,
+  onCancel,
+  apiUrls,
+  entityName,
+}) => {
+  const { newEntity, handleFieldChange, handleCreate, creating } = useEntityCreate<Entity>(
+    { create: apiUrls.create, fetchAll: apiUrls.fetchAll },
+    entityName,
+  );
 
   const handleAdd = async () => {
-    const newLinea = { nombre };
-
-    try {
-      const response = await fetch(apiEndpoint, { // Usamos la propiedad apiEndpoint
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(newLinea),
-      });
-
-      if (response.ok) {
-        console.log('Línea agregada exitosamente!');
-        setNombre(''); // Reinicia el campo de entrada
-        onAdd(); // Llama a la función onAdd para cerrar el formulario
-      } else {
-        console.error('Error al agregar la línea:', response.statusText);
-      }
-    } catch (error) {
-      console.error('Error al hacer la solicitud:', error);
-    }
+    await handleCreate(); // Crear entidad
+    onAdd(); // Realizamos cualquier acción extra (como cerrar el formulario o actualizar la UI)
   };
 
   return (
     <View style={styles.formContainer}>
       <TextInput
         placeholder="Nombre"
-        value={nombre}
-        onChangeText={setNombre}
+        value={newEntity?.nombre ?? ''}
+        onChangeText={(text) => handleFieldChange('nombre', text)}
         style={styles.input}
       />
       <View style={styles.buttonsContainer}>
-        <TouchableOpacity style={styles.button} onPress={handleAdd}>
-          <Text style={styles.buttonText}>Agregar</Text>
+        <TouchableOpacity style={styles.button} onPress={handleAdd} disabled={creating}>
+          <Text style={styles.buttonText}>{creating ? 'Agregando...' : 'Agregar'}</Text>
         </TouchableOpacity>
         <TouchableOpacity style={[styles.button, { backgroundColor: 'red' }]} onPress={onCancel}>
           <Text style={styles.buttonText}>Cancelar</Text>
