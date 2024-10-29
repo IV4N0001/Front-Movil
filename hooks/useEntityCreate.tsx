@@ -1,13 +1,9 @@
-//useEntityCreate.tsx
-
 import { useState } from 'react';
 
 export function useEntityCreate<T>(
-  apiUrls: {
-    create: string; // URL para crear la entidad
-    fetchAll: string
-  },
+  apiUrls: { create: string },
   entityName: string,
+  fetchEntities: () => Promise<void> // Callback para refrescar la tabla
 ) {
   const [newEntity, setNewEntity] = useState<Partial<T>>({});
   const [creating, setCreating] = useState(false);
@@ -21,7 +17,10 @@ export function useEntityCreate<T>(
   };
 
   const handleCreate = async () => {
-    if (!newEntity) return;
+    if (!newEntity || Object.keys(newEntity).length === 0) {
+      console.warn("No hay entidad para crear.");
+      return;
+    }
 
     setCreating(true);
     setError(null);
@@ -29,20 +28,17 @@ export function useEntityCreate<T>(
     try {
       const response = await fetch(apiUrls.create, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newEntity),
       });
 
       if (!response.ok) {
-        throw new Error(`Error creating ${entityName}: ${response.statusText}`);
+        throw new Error(`Error creando ${entityName}: ${response.statusText}`);
       }
 
-      // Si la creación fue exitosa, intenta hacer el fetch de las entidades actualizadas
-      console.log(`${entityName} creada exitosamente`);
-      setNewEntity({}); // Resetea el estado de nueva entidad
-      await fetch(apiUrls.fetchAll)
+      // Llama a fetchEntities para refrescar la tabla y espera a que termine antes de cambiar `creating`
+      await fetchEntities();
+      console.log(`${entityName} creada y fetchEntities ejecutado correctamente.`);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error desconocido');
       console.error(`Error creando ${entityName.toLowerCase()}:`, err);
@@ -57,5 +53,6 @@ export function useEntityCreate<T>(
     error,
     handleFieldChange,
     handleCreate,
+    fetchEntities
   };
 }

@@ -27,7 +27,7 @@ export default function EditableTable({ columns, apiUrls, entityName }: Editable
   const { filteredEntities } = useFilteredEntities(entities, searchId);
 
   const [page, setPage] = React.useState<number>(0);
-  const [numberOfItemsPerPageList] = React.useState([4]);
+  const [numberOfItemsPerPageList] = React.useState([8]);
   const [itemsPerPage, onItemsPerPageChange] = React.useState(numberOfItemsPerPageList[0]);
 
   const from = page * itemsPerPage;
@@ -35,7 +35,11 @@ export default function EditableTable({ columns, apiUrls, entityName }: Editable
   const paginatedEntities = filteredEntities.slice(from, to);
 
   React.useEffect(() => {
-    setPage(0);
+    fetchEntities(); // Llamar a fetchEntities cuando el componente se monte
+  }, []);
+
+  React.useEffect(() => {
+    setPage(0); // Resetear la página al cambiar los items por página
   }, [itemsPerPage]);
 
   const { editingEntity, editedFields, startEditing, handleFieldChange, handleSave, handleDelete } = useEntityEditing<EntityBase>(
@@ -43,10 +47,6 @@ export default function EditableTable({ columns, apiUrls, entityName }: Editable
     entityName,
     fetchEntities
   );
-
-  React.useEffect(() => {
-    fetchEntities();
-  }, []);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -115,7 +115,6 @@ export default function EditableTable({ columns, apiUrls, entityName }: Editable
     </SafeAreaView>
   );
 }
-
 
 const styles = StyleSheet.create({
   container: {

@@ -1,15 +1,14 @@
-// addGenericForm.tsx
+//addGenericForm.tsx
 
 import React from 'react';
 import { View, StyleSheet, TextInput, TouchableOpacity, Text } from 'react-native';
 import { useEntityCreate } from '../hooks/useEntityCreate';
 
 interface GenericFormProps {
-  onAdd: () => void;
+  onAdd: () => Promise<void>;
   onCancel: () => void;
   apiUrls: {
     create: string;
-    fetchAll: string;
   };
   entityName: string;
 }
@@ -25,14 +24,10 @@ const AddGenericForm: React.FC<GenericFormProps> = ({
   entityName,
 }) => {
   const { newEntity, handleFieldChange, handleCreate, creating } = useEntityCreate<Entity>(
-    { create: apiUrls.create, fetchAll: apiUrls.fetchAll },
+    { create: apiUrls.create },
     entityName,
+    onAdd
   );
-
-  const handleAdd = async () => {
-    await handleCreate(); // Crear entidad
-    onAdd(); // Realizamos cualquier acción extra (como cerrar el formulario o actualizar la UI)
-  };
 
   return (
     <View style={styles.formContainer}>
@@ -43,7 +38,7 @@ const AddGenericForm: React.FC<GenericFormProps> = ({
         style={styles.input}
       />
       <View style={styles.buttonsContainer}>
-        <TouchableOpacity style={styles.button} onPress={handleAdd} disabled={creating}>
+        <TouchableOpacity style={styles.button} onPress={handleCreate} disabled={creating}>
           <Text style={styles.buttonText}>{creating ? 'Agregando...' : 'Agregar'}</Text>
         </TouchableOpacity>
         <TouchableOpacity style={[styles.button, { backgroundColor: 'red' }]} onPress={onCancel}>

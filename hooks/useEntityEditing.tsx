@@ -1,3 +1,5 @@
+//useEntityEditing.tsx
+
 import { useState } from 'react';
 
 export function useEntityEditing<T>(

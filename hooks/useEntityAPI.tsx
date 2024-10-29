@@ -1,6 +1,7 @@
+//useEntityAPI.tsx
+
 import { useState } from 'react';
 
-// Cambia el parámetro `apiUrl` a `apiUrls` y ajusta los tipos
 export function useEntityAPI<T>(apiUrls: { fetchAll: string; fetchById: (id: number) => string }, entityName: string) {
   const [entities, setEntities] = useState<T[]>([]);
 

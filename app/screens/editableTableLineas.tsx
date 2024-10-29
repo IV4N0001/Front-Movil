@@ -6,6 +6,8 @@ import { FontAwesome6 } from '@expo/vector-icons';
 import EditableTable from '../../components/editableTable';
 import { API_URL } from '@/constants/config';
 import AddGenericForm from '@/components/addGenericForm';
+import { useEntityAPI } from '@/hooks/useEntityAPI';
+import { useEntityCreate } from '@/hooks/useEntityCreate';
 
 const columns = [
   { key: 'id', title: 'ID' },
@@ -19,9 +21,9 @@ export default function EditableTableLineas() {
     setIsFormVisible(false);
   };
 
-  const handleAddLinea = () => {
-    // Aquí puedes agregar lógica adicional después de agregar la línea, como refrescar datos
+  const handleAddLinea = async () => {
     setIsFormVisible(false);
+    await fetchEntities(); // Llamamos a fetchEntities después de crear una línea
   };
 
   // Definimos las URLs de la API
@@ -33,31 +35,30 @@ export default function EditableTableLineas() {
     delete: (id: number) => `${API_URL}/lineas/eliminarLinea/${id}`,
   };
 
+  const { fetchEntities } = useEntityAPI(apiUrls, "linea"); // Extraemos fetchEntities
+
   return (
     <>
-      {/* Renderiza la tabla editable */}
       <EditableTable columns={columns} entityName="linea" apiUrls={apiUrls} />
 
-      {/* Botón para abrir el formulario */}
       <View style={styles.buttonContainer}>
         <TouchableOpacity style={styles.addButton} onPress={() => setIsFormVisible(true)}>
           <FontAwesome6 name="plus" size={24} color="white" />
-          <Text style={styles.buttonText}></Text>
         </TouchableOpacity>
       </View>
-
-      {/* Renderiza el formulario si isFormVisible es true */}
+      
       {isFormVisible && (
         <AddGenericForm
-          onAdd={handleAddLinea} // Llama a `handleAddLinea` para actualizar la tabla tras agregar la línea
+          onAdd={handleAddLinea} // Llamamos a handleAddLinea para actualizar la tabla tras agregar la línea
           onCancel={handleCancel}
-          apiUrls={apiUrls} // Pasamos la URL para crear la línea
+          apiUrls={apiUrls}
           entityName={'linea'}        
         />
       )}
     </>
   );
 }
+
 
 // Estilos para el botón
 const styles = StyleSheet.create({
