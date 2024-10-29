@@ -1,5 +1,3 @@
-//addGenericForm.tsx
-
 import React from 'react';
 import { View, StyleSheet, TextInput, TouchableOpacity, Text } from 'react-native';
 import { useEntityCreate } from '../hooks/useEntityCreate';

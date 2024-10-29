@@ -1,5 +1,3 @@
-//editableTable.tsx
-
 import React from 'react';
 import { View, TextInput, SafeAreaView, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
 import { DataTable } from 'react-native-paper';
